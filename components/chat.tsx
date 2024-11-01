@@ -11,8 +11,9 @@ import { Message, Session } from '@/lib/types'
 import { usePathname, useRouter } from 'next/navigation'
 import { useScrollAnchor } from '@/lib/hooks/use-scroll-anchor'
 import { toast } from 'sonner'
-import { TickerTape } from '@/components/tradingview/ticker-tape'
 import { MissingApiKeyBanner } from '@/components/missing-api-key-banner'
+
+const COOLDOWN_TIME = 30 // seconds
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -27,6 +28,8 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
   const [input, setInput] = useState('')
   const [messages] = useUIState()
   const [aiState] = useAIState()
+  const [isOnCooldown, setIsOnCooldown] = useState(false)
+  const [cooldownTime, setCooldownTime] = useState(COOLDOWN_TIME)
 
   const [_, setNewChatId] = useLocalStorage('newChatId', id)
 
@@ -43,7 +46,6 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
     if (messagesLength === 2) {
       router.refresh()
     }
-    console.log('Value: ', aiState.messages)
   }, [aiState.messages, router])
 
   useEffect(() => {
@@ -56,6 +58,22 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
     })
   }, [missingKeys])
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (isOnCooldown) {
+      timer = setInterval(() => {
+        setCooldownTime(prev => {
+          if (prev <= 1) {
+            setIsOnCooldown(false)
+            return COOLDOWN_TIME
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => clearInterval(timer)
+  }, [isOnCooldown])
+
   const { messagesRef, scrollRef, visibilityRef, isAtBottom, scrollToBottom } =
     useScrollAnchor()
 
@@ -64,12 +82,6 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
       className="group w-full overflow-auto pl-0 peer-[[data-state=open]]:lg:pl-[250px] peer-[[data-state=open]]:xl:pl-[300px]"
       ref={scrollRef}
     >
-      {messages.length ? (
-        <MissingApiKeyBanner missingKeys={missingKeys} />
-      ) : (
-        <TickerTape />
-      )}
-
       <div
         className={cn(
           messages.length ? 'pb-[200px] pt-4 md:pt-6' : 'pb-[200px] pt-0',
@@ -90,6 +102,10 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
         setInput={setInput}
         isAtBottom={isAtBottom}
         scrollToBottom={scrollToBottom}
+        isOnCooldown={isOnCooldown}
+        setIsOnCooldown={setIsOnCooldown}
+        cooldownTime={cooldownTime}
+        setCooldownTime={setCooldownTime}
       />
     </div>
   )

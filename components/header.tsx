@@ -11,33 +11,27 @@ import {
   IconVercel
 } from '@/components/ui/icons'
 import { Session } from '@/lib/types'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 async function UserOrLogin() {
   return (
     <>
-      <Link href="https://wow.groq.com/groq-labs/" rel="nofollow">
-        {/* <IconGroq className="size-6 mr-2 dark:hidden" />
-          <IconGroq className="hidden size-6 mr-2 dark:block" /> */}
-        <Image
-          src="/groqlabs-logo-black.png"
-          alt="GroqLabs Logo"
-          width={100}
-          height={30}
-        />
+      <Link href="https://web.89281112.xyz/" rel="nofollow">
+        Main
       </Link>
 
       <div className="flex items-center font-semibold">
         <IconSeparator className="size-6 text-muted-foreground/50" />
-        <a href="/new">StockBot</a>
-        <IconSeparator className="size-6 text-muted-foreground/50" />
-        <a
-          href="/new"
-          rel="noopener noreferrer"
-          className={cn(buttonVariants({ variant: 'ghost' }))}
-          style={{ borderRadius: 0, color: '#F55036', padding: '4px' }}
-        >
-          <span className="flex">Start New Chat</span>
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="/stockbot-on-groq"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ variant: 'ghost' }))}
+            style={{ borderRadius: 0, color: '#F55036', padding: '4px' }}
+          >
+            <span className="flex">Start New Chat</span>
+          </a>
+        </div>
       </div>
     </>
   )
@@ -52,16 +46,7 @@ export function Header() {
         </React.Suspense>
       </div>
       <div className="flex items-center justify-end space-x-2">
-        <a
-          target="_blank"
-          href="https://github.com/bklieger-groq/groq-gen-ui/"
-          rel="noopener noreferrer"
-          className={cn(buttonVariants({ variant: 'outline' }))}
-          style={{ borderRadius: 0 }}
-        >
-          <IconGitHub />
-          <span className="hidden ml-2 md:flex">GitHub</span>
-        </a>
+        <ThemeToggle />
       </div>
     </header>
   )

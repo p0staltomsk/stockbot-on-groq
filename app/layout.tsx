@@ -3,7 +3,7 @@ import { GeistMono } from 'geist/font/mono'
 
 import '@/app/globals.css'
 import { cn } from '@/lib/utils'
-// import { ThemeToggle } from '@/components/theme-toggle'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Providers } from '@/components/providers'
 import { Header } from '@/components/header'
 import { Toaster } from '@/components/ui/sonner'
@@ -19,8 +19,7 @@ export const metadata = {
   description:
     'Lightning Fast AI Chatbot that Responds With Live Interactive Stock Charts, Financials, News, Screeners, and More.',
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
+    shortcut: '/stockbot-on-groq/favicon-16x16.png',
     apple: '/apple-touch-icon.png'
   }
 }
@@ -57,7 +56,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <Header />
             <main className="flex flex-col flex-1 bg-muted/50">{children}</main>
           </div>
-          {/* <ThemeToggle /> */}
         </Providers>
       </body>
     </html>

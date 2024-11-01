@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect, useRef, memo } from 'react'
+import React, { useEffect, useRef, memo, useState } from 'react'
+import { LoadingIndicator } from './loading-indicator'
 
 type ComparisonSymbolObject = {
   symbol: string;
@@ -9,6 +10,7 @@ type ComparisonSymbolObject = {
 
 export function StockChart({ symbol, comparisonSymbols }: { symbol: string, comparisonSymbols: ComparisonSymbolObject[] }) {
   const container = useRef<HTMLDivElement>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!container.current) return
@@ -17,6 +19,11 @@ export function StockChart({ symbol, comparisonSymbols }: { symbol: string, comp
       'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'
     script.type = 'text/javascript'
     script.async = true
+
+    // Add load handlers
+    script.onload = () => setIsLoading(false)
+    script.onerror = () => setIsLoading(false)
+
     script.innerHTML = JSON.stringify({
       autosize: true,
       symbol: symbol,
@@ -48,8 +55,9 @@ export function StockChart({ symbol, comparisonSymbols }: { symbol: string, comp
 
   return (
     <div style={{ height: '500px' }}>
+      {isLoading && <LoadingIndicator />}
       <div
-        className="tradingview-widget-container"
+        className={`tradingview-widget-container ${isLoading ? 'hidden' : ''}`}
         ref={container}
         style={{ height: '100%', width: '100%' }}
       >
@@ -58,13 +66,7 @@ export function StockChart({ symbol, comparisonSymbols }: { symbol: string, comp
           style={{ height: 'calc(100% - 32px)', width: '100%' }}
         ></div>
         <div className="tradingview-widget-copyright">
-          <a
-            href="https://www.tradingview.com/"
-            rel="noopener nofollow"
-            target="_blank"
-          >
-            <span className="">Track all markets on TradingView</span>
-          </a>
+          
         </div>
       </div>
     </div>

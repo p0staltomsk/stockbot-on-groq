@@ -20,12 +20,22 @@ import { useRouter } from 'next/navigation'
 
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 
+const COOLDOWN_TIME = 30 // seconds
+
 export function PromptForm({
   input,
-  setInput
+  setInput,
+  isOnCooldown,
+  setIsOnCooldown,
+  cooldownTime,
+  setCooldownTime
 }: {
   input: string
   setInput: (value: string) => void
+  isOnCooldown: boolean
+  setIsOnCooldown: (value: boolean) => void
+  cooldownTime: number
+  setCooldownTime: (value: number) => void
 }) {
   const router = useRouter()
   const { formRef, onKeyDown } = useEnterSubmit()
@@ -40,35 +50,47 @@ export function PromptForm({
     }
   }, [])
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (isOnCooldown) {
+      return
+    }
+
+    // Blur focus on mobile
+    if (window.innerWidth < 600) {
+      e.currentTarget.querySelector('textarea')?.blur()
+    }
+
+    const value = input.trim()
+    setInput('')
+    if (!value) return
+
+    // Start cooldown
+    setIsOnCooldown(true)
+    setCooldownTime(COOLDOWN_TIME)
+
+    // Optimistically add user message UI
+    setMessages(currentMessages => [
+      ...currentMessages,
+      {
+        id: nanoid(),
+        display: <UserMessage>{value}</UserMessage>
+      }
+    ])
+
+    // Submit and get response message
+    try {
+      const responseMessage = await submitUserMessage(value, apiKey)
+      setMessages(currentMessages => [...currentMessages, responseMessage])
+    } catch (error) {
+      console.error('Error submitting message:', error)
+      // Можно добавить toast уведомление об ошибке здесь
+    }
+  }
+
   return (
-    <form
-      ref={formRef}
-      onSubmit={async (e: any) => {
-        e.preventDefault()
-
-        // Blur focus on mobile
-        if (window.innerWidth < 600) {
-          e.target['message']?.blur()
-        }
-
-        const value = input.trim()
-        setInput('')
-        if (!value) return
-
-        // Optimistically add user message UI
-        setMessages(currentMessages => [
-          ...currentMessages,
-          {
-            id: nanoid(),
-            display: <UserMessage>{value}</UserMessage>
-          }
-        ])
-
-        // Submit and get response message
-        const responseMessage = await submitUserMessage(value, apiKey)
-        setMessages(currentMessages => [...currentMessages, responseMessage])
-      }}
-    >
+    <form ref={formRef} onSubmit={handleSubmit}>
       <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-background px-8 sm:border sm:px-12">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -90,7 +112,11 @@ export function PromptForm({
           ref={inputRef}
           tabIndex={0}
           onKeyDown={onKeyDown}
-          placeholder="Send a message."
+          placeholder={
+            isOnCooldown
+              ? `Please wait ${cooldownTime}s before next message...`
+              : 'Send a message.'
+          }
           className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
           autoFocus
           spellCheck={false}
@@ -100,18 +126,30 @@ export function PromptForm({
           rows={1}
           value={input}
           onChange={e => setInput(e.target.value)}
+          disabled={isOnCooldown}
         />
         <div className="absolute right-0 top-[13px] sm:right-4">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button type="submit" size="icon" disabled={input === ''}>
-                <div className="rotate-180">
-                  <IconArrowDown />
-                </div>
+              <Button
+                type="submit"
+                size="icon"
+                disabled={input === '' || isOnCooldown}
+                className={isOnCooldown ? 'cursor-not-allowed opacity-50' : ''}
+              >
+                {isOnCooldown ? (
+                  <div className="text-xs font-medium">{cooldownTime}s</div>
+                ) : (
+                  <div className="rotate-180">
+                    <IconArrowDown />
+                  </div>
+                )}
                 <span className="sr-only">Send message</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Send message</TooltipContent>
+            <TooltipContent>
+              {isOnCooldown ? `Wait ${cooldownTime}s` : 'Send message'}
+            </TooltipContent>
           </Tooltip>
         </div>
       </div>

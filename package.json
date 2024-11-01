@@ -1,9 +1,11 @@
 {
+  "name": "stockbot",
+  "homepage": "https://web.89281112.xyz/stockbot-on-groq/",
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3012",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",

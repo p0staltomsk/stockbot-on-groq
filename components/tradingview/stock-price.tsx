@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useEffect, useRef, memo } from 'react'
+import React, { useEffect, useRef, memo, useState } from 'react'
+import { LoadingIndicator } from './loading-indicator'
 
 export function StockPrice({ props: symbol }: { props: string }) {
   const container = useRef<HTMLDivElement>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!container.current) return
@@ -12,6 +14,11 @@ export function StockPrice({ props: symbol }: { props: string }) {
       'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js'
     script.type = 'text/javascript'
     script.async = true
+
+    // Add load handlers
+    script.onload = () => setIsLoading(false)
+    script.onerror = () => setIsLoading(false)
+
     script.innerHTML = `
       {
         "symbols": [
@@ -68,16 +75,14 @@ export function StockPrice({ props: symbol }: { props: string }) {
 
   return (
     <div style={{ height: '500px' }}>
-      <div className="tradingview-widget-container" ref={container}>
+      {isLoading && <LoadingIndicator />}
+      <div
+        className={`tradingview-widget-container ${isLoading ? 'hidden' : ''}`}
+        ref={container}
+      >
         <div className="tradingview-widget-container__widget"></div>
         <div className="tradingview-widget-copyright">
-          <a
-            href="https://www.tradingview.com/"
-            rel="noopener nofollow"
-            target="_blank"
-          >
-            <span className="">Track all markets on TradingView</span>
-          </a>
+          
         </div>
       </div>
     </div>

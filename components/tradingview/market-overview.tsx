@@ -1,9 +1,12 @@
 'use client'
 
-import React, { useEffect, useRef, memo } from 'react'
+import React, { useEffect, useRef, memo, useState } from 'react'
+import { LoadingIndicator, createLoadingController } from './loading-indicator'
 
 export function MarketOverview({}) {
   const container = useRef<HTMLDivElement>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const loadingController = useRef(createLoadingController())
 
   useEffect(() => {
     if (!container.current) return
@@ -13,6 +16,20 @@ export function MarketOverview({}) {
       'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js'
     script.type = 'text/javascript'
     script.async = true
+
+    // Обработчики загрузки
+    script.onload = async () => {
+      // Добавляем минимальную задержку для плавности
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      loadingController.current.complete()
+      setIsLoading(false)
+    }
+
+    script.onerror = () => {
+      loadingController.current.complete()
+      setIsLoading(false)
+    }
+
     script.innerHTML = JSON.stringify({
       width: '100%',
       height: '100%',
@@ -145,6 +162,7 @@ export function MarketOverview({}) {
 
     return () => {
       if (container.current) {
+        loadingController.current.complete()
         container.current.removeChild(script)
       }
     }
@@ -152,8 +170,11 @@ export function MarketOverview({}) {
 
   return (
     <div style={{ height: '300px' }}>
+      {isLoading && <LoadingIndicator />}
       <div
-        className="tradingview-widget-container"
+        className={`tradingview-widget-container transition-opacity duration-300 ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
         ref={container}
         style={{ height: '100%', width: '100%' }}
       >
@@ -161,15 +182,7 @@ export function MarketOverview({}) {
           className="tradingview-widget-container__widget"
           style={{ height: 'calc(100% - 32px)', width: '100%' }}
         ></div>
-        <div className="tradingview-widget-copyright">
-          <a
-            href="https://www.tradingview.com/"
-            rel="noopener nofollow"
-            target="_blank"
-          >
-            <span className="">Track all markets on TradingView</span>
-          </a>
-        </div>
+        <div className="tradingview-widget-copyright"></div>
       </div>
     </div>
   )

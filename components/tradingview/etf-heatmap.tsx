@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useEffect, useRef, memo } from 'react'
+import React, { useEffect, useRef, memo, useState } from 'react'
+import { LoadingIndicator } from './loading-indicator'
 
 export function ETFHeatmap({}) {
   const container = useRef<HTMLDivElement>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!container.current) return
@@ -13,6 +15,11 @@ export function ETFHeatmap({}) {
       'https://s3.tradingview.com/external-embedding/embed-widget-etf-heatmap.js'
     script.type = 'text/javascript'
     script.async = true
+
+    // Add load handlers
+    script.onload = () => setIsLoading(false)
+    script.onerror = () => setIsLoading(false)
+
     script.innerHTML = JSON.stringify({
       dataSource: 'AllUSEtf',
       blockSize: 'aum',
@@ -41,8 +48,9 @@ export function ETFHeatmap({}) {
 
   return (
     <div style={{ height: '500px' }}>
+      {isLoading && <LoadingIndicator />}
       <div
-        className="tradingview-widget-container"
+        className={`tradingview-widget-container ${isLoading ? 'hidden' : ''}`}
         ref={container}
         style={{ height: '100%', width: '100%' }}
       >
@@ -51,13 +59,7 @@ export function ETFHeatmap({}) {
           style={{ height: 'calc(100% - 32px)', width: '100%' }}
         ></div>
         <div className="tradingview-widget-copyright">
-          <a
-            href="https://www.tradingview.com/"
-            rel="noopener nofollow"
-            target="_blank"
-          >
-            <span className="">Track all markets on TradingView</span>
-          </a>
+          
         </div>
       </div>
     </div>
